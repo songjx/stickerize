@@ -3,28 +3,37 @@
 
 import cv2
 import numpy as np
-np.set_printoptions(threshold='nan') # print whole arrays, for debugging
+import os
+#np.set_printoptions(threshold='nan') # print whole arrays, for debugging
 
-#imgName = 'plastic-domed-sight'
-#imgName = 'door-closed-sign'
-imgName = '10-ton-set'
+imgDir = './test-images'
+walk = os.walk(imgDir)
 
-origImg = cv2.imread('test-images/'+imgName+'.png',-1) # load image as is (with alpha channel)
-print origImg.shape
-print origImg.dtype
-h_orig,w_orig,c_orig = origImg.shape
+for roots, dirs, files in walk:
+    for img in files:
+        imgPath = os.path.join(os.path.relpath(roots),img)
+        imgName = os.path.basename(img)
+        # load image as is (with alpha channel)
+        origImg = cv2.imread(imgPath,-1) 
+        h_orig,w_orig,c_orig = origImg.shape
+        # blank img for side by side comparison
+        comparisonImg = np.zeros((h_orig,2*w_orig,c_orig),origImg.dtype) 
+        comparisonImg[:,0:w_orig] = origImg 
 
-if origImg.shape[2] == 4: # if image has an alpha channel
-    imgAlpha = origImg[:,:,3].copy()
-    comparisonImg = np.zeros((h_orig,2*w_orig,c_orig),origImg.dtype) # blank img for side by side comparison
-    comparisonImg[:,0:w_orig] = origImg 
-    for c in range(3):
-        comparisonImg[:,w_orig:,c] = imgAlpha # set pixels white where origImg wasn't transparent
-    comparisonImg[:,w_orig:,3] = 255
-    cv2.imshow('comparison, '+imgName,comparisonImg)
-else: 
-    print "original image has no alpha channel"
+        # if image has an alpha channel
+        if origImg.shape[2] == 4: 
+            imgAlpha = origImg[:,:,3].copy()
+            # set pixels white where origImg wasn't transparent
+            for c in range(3):
+                comparisonImg[:,w_orig:,c] = imgAlpha 
+            comparisonImg[:,w_orig:,3] = 255
+        else: 
+            print imgName + " has no alpha channel"
+            for c in range(3):
+                    comparisonImg[:,w_orig:,c] = 255
+        
+        cv2.imshow('comparison, '+imgName,comparisonImg)
+        cv2.waitKey(0)
 
-cv2.waitKey(0) # wait indefinitely for keystroke
 cv2.destroyAllWindows()
 
