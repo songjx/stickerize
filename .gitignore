@@ -1,4 +1,7 @@
 *.swp
 *~
 test-images
-
+blobs
+comparison-images
+notes
+padded-images
