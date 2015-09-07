@@ -5,3 +5,4 @@ blobs
 comparison-images
 notes
 padded-images
+*.pyc
