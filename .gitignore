@@ -8,3 +8,4 @@ padded-images
 *.pyc
 pnm-blobs
 svgs
+plots
