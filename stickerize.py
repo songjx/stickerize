@@ -2,6 +2,7 @@ import cv2
 import math
 import os
 import numpy as np
+import subprocess as sbp
 
 class singleSticker:
     def __init__(self, img_path):
@@ -36,8 +37,8 @@ class singleSticker:
     def make_blob(self, blob_dir = './blobs', comparison_dir = './comparison-images'):
         """Extract, condition, compare, and save binary blob from padded image."""
         # set paths
-        self.paths['blob'] = blob_dir
-        self.paths['comparison'] = comparison_dir
+        self.paths['blob'] = os.path.join(blob_dir, self.info['name'])
+        self.paths['comparison'] = os.path.join(comparison_dir, self.info['name'])
 
         # extract alpha channel
         self.img_alpha = self.padded_img[:,:,3].copy()
@@ -69,7 +70,7 @@ class singleSticker:
                     self.img_alpha,
                     cv2.bitwise_xor(self.dil_alpha, self.filled_alpha))
         _, self.pretty_blob[:,:,3] = cv2.threshold(
-                self.pretty_blob[:,:,0], 0, 255, cv2.THRESH_BINARY)
+                self.pretty_blob[:,:,0], 0, 255, cv2.THRESH_BINARY_INV)
         
         # make side-by-side comparison image
         self.comp_img = np.zeros((
@@ -77,15 +78,34 @@ class singleSticker:
                 self.orig_img.dtype)
         self.comp_img[:,0:self.info['w_padded']] = self.padded_img
         self.comp_img[:,self.info['w_padded']:,:] = self.pretty_blob
-        cv2.imwrite(os.path.join(comparison_dir, self.info['name']), self.comp_img)
+        cv2.imwrite(self.paths['comparison'], self.comp_img)
 
         # write blob to file
         self.blob = self.pretty_blob[:,:,3]
-        cv2.imwrite(os.path.join(blob_dir, self.info['name']), self.blob)
+        cv2.imwrite(self.paths['blob'], self.blob)
 
-    def make_svg():
+    def make_svg(self, pnm_dir = './pnm-blobs', svg_dir = './svgs'):
         """Generate and save svg of single sticker."""
-        pass
+        self.paths['pnm'] = os.path.join(
+                pnm_dir, os.path.splitext(self.info['name'])[0]+'.pnm')
+        self.paths['svg'] = os.path.join(
+                svg_dir, os.path.splitext(self.info['name'])[0]+'.svg')
+
+        # convert blob to pnm because potrace is picky
+        sbp.call(['convert',
+                self.paths['blob'],
+                self.paths['pnm']])
+
+        # potrace pnm
+        sbp.call(['potrace',
+                '--svg',
+                '-o'+self.paths['svg'],
+                self.paths['pnm']])
+
+
+def plots(stickers):
+    """Generate some sticker statistics."""
+    pass
 
 def sticker_sheet(stickers):
     """Generate a sticker sheet."""

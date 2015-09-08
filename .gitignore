@@ -6,3 +6,5 @@ comparison-images
 notes
 padded-images
 *.pyc
+pnm-blobs
+svgs
